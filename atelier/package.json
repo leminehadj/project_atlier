@@ -1,0 +1,28 @@
+{
+  "name": "electronjs-app",
+  "version": "0.0.1",
+  "description": "test app",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "dev:watch": "npx electronmon --trace-warnings .",
+    "package-win": "electron-packager . --overwrite --platform=win32 --arch=x64 --icon=app/public/logo512.ico"
+  },
+  "keywords": [
+    "electron",
+    "reactjs",
+    "tailwind"
+  ],
+  "author": "MIT",
+  "license": "MIT",
+  "dependencies": {
+    "mysql2": "^3.9.4",
+    "react-router-dom": "^6.22.0",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5"
+  },
+  "devDependencies": {
+    "electron": "^29.1.0"
+  }
+}
