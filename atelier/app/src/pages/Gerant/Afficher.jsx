@@ -8,6 +8,7 @@ import AM from "./AM";
 import AlertModal from "../AlertModal";
 import {table_socket} from "../../js/table_socket";
 import io from 'socket.io-client';
+
 const Afficher = ({onRowSelect,choice}) => {
   const [rowData, setRowData] = useState([]);
   // const [detailsMode, setDetailsMode] = useState({ active: false, rowId: null });
@@ -29,16 +30,7 @@ const Afficher = ({onRowSelect,choice}) => {
       })));
     });
 
-    // Handle delete response
-    socket.on('deleteResponse', (response) => {
-      if (response.success) {
-       // setRowData(prev => prev.filter(user => user.N !== response.userId));
-        alert('User deleted successfully');
-        document.querySelector(`tr[data-user-id="${response.userId}"]`).remove();
-      } else {
-        alert('Failed to delete user');
-      }
-    });
+
 
     return () => {
       socket.disconnect();
@@ -60,20 +52,6 @@ const Afficher = ({onRowSelect,choice}) => {
 const [selectedRows, setSelectedRows] = useState([]);
 const [selectAll, setSelectAll] = useState(false);
 
-    // const handleRowClick = (row) => {
-    //   const isSelected = selectedRows.includes(row.N);
-    //   if (isSelected) {
-    //     const newSelectedRows = selectedRows.filter(N => N!== row.N);
-    //     setSelectedRows(newSelectedRows);
-    //     onRowSelect(null, newSelectedRows.length); // No row is considered selected
-    //   } else {
-    //     const newSelectedRows = [...selectedRows, row.N];
-    //     setSelectedRows(newSelectedRows);
-    //     onRowSelect(row.N, newSelectedRows.length); // Pass the new length of selectedRows
-    //     console.log(`Details: Nom: ${row.nom}, Pre: ${row.Quantite}, Id: ${row.N}`);
-    //   }
-    //   console.log(selectedRows.length);
-    // };
 
 
     const toggleSelectAll = () => {
@@ -85,7 +63,7 @@ const [selectAll, setSelectAll] = useState(false);
       setSelectAll(!selectAll);
     };
 
-    const handleDeletePer = (id) => {};
+    // const handleDeletePer = (id) => {};
     const handleDeleteStock = (id) => {};
     const [detailsMode, setdetailsMode] = useState({ active: false, rowId: null,username:null,nom:null,prenom:null,role:null,password:null });
     const [editModePer, seteditModePer] = useState({ active: false, rowId: null });
@@ -116,36 +94,28 @@ const [selectAll, setSelectAll] = useState(false);
       setDeleteMode({ active: false, rowId: null });
     };
 
+
+
     const deleteDetails = (id) => {
-      const socket = io('http://localhost:4000'); // Ensure socket is initialized at a higher level or use existing socket
-      socket.emit('deleteUser', id); // Or the appropriate event for deleting
-      setDeleteMode({ active: false, rowId: null }); // Reset delete mode after initiating delete
+      // Prompt the user for confirmation before actually sending the delete command
+      setDeleteMode({ active: true, rowId: id });
     };
 
-    // Listen to the delete response from the server
-    // socket.on('deleteResponse', (response) => {
-    //   if (response.success) {
-    //     setRowData(prev => prev.filter(user => user.N !== response.userId));
-    //     alert('User deleted successfully');
-    //   } else {
-    //     alert('Failed to delete user');
-    //   }
-    // });
+    // Later, when the user confirms the deletion in the modal:
+    const handleDeletePer = (id) => {
+      const socket = io('http://localhost:4000'); // Consider initializing this socket at a higher level to reuse the connection
+      socket.emit('deleteUser', id);
+      socket.on('deleteResponse', (response) => {
+        if (response.success) {
+          setRowData(prev => prev.filter(user => user.N !== id));
+         // alert('User deleted successfully');
+        } else {
+               alert("erro during deleting user")
+        }
+      });
+      setDeleteMode({ active: false, rowId: null });
+    };
 
-
-    // const handleDeleteUser = (id) => {
-    //   // This function should emit the deleteUser event to the socket
-    //   // For example: socket.emit('deleteUser', id);
-    //   setDeleteMode({ active: false, rowId: null });
-    // };
-    // if (detailsMode.active) {
-    //   return (
-    //     <UserDetails
-    //       id={detailsMode.rowId}
-    //       exitdetailsMode={() => setdetailsMode({ active: false, rowId: null })}
-    //     />
-    //   );
-    // }
 
     const EditDetails = (id,choice) => {
       if(choice==="personnel")
@@ -172,16 +142,6 @@ const [selectAll, setSelectAll] = useState(false);
       );
       }
 
-    const AddDetails = (id) => {
-        setaddMode({ active: true, rowId: id });
-      };
-
-    //  const deleteDetails = (id)=> {
-    //     setdeleteMode({active:true , rowId:id})
-    //  }
-    //  const cancelDelete=()=>{
-    //   setdeleteMode({active:false, rowId:null})
-    //  }
 
   return (
 
@@ -300,95 +260,9 @@ const [selectAll, setSelectAll] = useState(false);
 )}
 
         </tbody>
-          {/* <tbody id="tbd">
 
-          </tbody> */}
           </table>
 
-{/*
-            {rowData.map((row,index) => (
-  <tr
-    key={row.id}
-    className="h-16 cursor-pointer hover:bg-slate-200 border-y "
-    onClick={() => handleRowClick(row)}
-  >
-
-    <th >{row.N}</th>
-    <td >{row.nom}</td>
-    <td>{row.pre}</td>
-    <td >{row.role}</td>
-    <td className="w-1/5">password</td>
-
-<td className="w-1/5">action</td>
-    <td>
-      <label className="flex justify-evenly items-center h-full w-full">
-        <div>
-                      <CgDetailsMore className="cursor-pointer hover:bg-slate-300 size-8 p-1 rounded-xl "
-                      onClick={() => seeDetails(row.N)}
-                      onMouseEnter={() =>{setIsHoveredInfo(index)}}
-                      onMouseLeave={() =>setIsHoveredInfo(null)}
-                      onMouseMove={handleMouseMove}/>
-                      {isHoveredInfo===index && (
-                  <p
-                    className="text-sm p-1 rounded bg-slate-100 absolute mt-5 "
-                    style={{
-                      left: `${mousePosition.x}px`,
-                      top: `${mousePosition.y}px`
-                    }}
-                  >
-                    Details
-                  </p>
-                )}
-                    </div>
-                    <div>
-                      <FaEdit className=" cursor-pointer hover:bg-slate-300 size-8 p-1 rounded-xl"
-                      onClick={()=> EditDetails(row.N,"personnel")}
-                      onMouseEnter={() =>{setIsHoveredM(index)}}
-                      onMouseLeave={() =>setIsHoveredM(null)}
-                      onMouseMove={handleMouseMove}/>
-                      {isHoveredM===index && (
-                  <p
-                    className="text-sm p-1 rounded bg-slate-100 absolute mt-5 "
-                    style={{
-                      left: `${mousePosition.x}px`,
-                      top: `${mousePosition.y}px`
-                    }}
-                  >
-                    Modifier
-                  </p>
-                )}
-                    </div>
-                    <div>
-                      <MdDelete className=" cursor-pointer hover:bg-slate-300 size-8 p-1 rounded-2xl"
-                      onClick={() => deleteDetails(row.N)}
-                      onMouseEnter={() =>{setIsHoveredD(index)}}
-                      onMouseLeave={() =>setIsHoveredD(null)}
-                      onMouseMove={handleMouseMove}/>
-                    {isHoveredD===index && (
-                <p
-                  className="text-sm p-1 rounded bg-slate-100 absolute mt-5 "
-                  style={{
-                    left: `${mousePosition.x}px`,
-                    top: `${mousePosition.y}px`
-                  }}
-                >
-                  Suprimer
-                </p>
-              )}
-                    </div>
-                    </label>
-
-                  </td>
-                </tr>
-              ))}
- {deleteMode.active && (
-        <AlertModal option={"Voulez-vous Suprimer cette utilisateur ?" }
-        onContinue={handleDeletePer(deleteMode.rowId)}
-        onClose={cancelDelete}
-        exitAddMode={() => setaddMode({ active: false, rowId: null })}/>
-      )} */}
-
-            {/* Other table rows */}
 
 
 </div>
